@@ -6,11 +6,7 @@ import { MyConfigModule } from './config.module';
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
-  // Registra el módulo de configuración -----
-  app.select(MyConfigModule).get(MyConfigModule);
-
-
-  // Habilitar Swagger
+  // Habilitar Swagger -----
   const options = new DocumentBuilder()
     .setTitle('Nombre de tu API')
     .setDescription('Descripción de tu API')

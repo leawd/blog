@@ -13,5 +13,6 @@ import { EmailValidationService } from 'src/helper.service';
   ],
   controllers: [UsersController],
   providers: [UsersService, EmailValidationService],
+  exports: [UsersService],
 })
 export class UsersModule {}
