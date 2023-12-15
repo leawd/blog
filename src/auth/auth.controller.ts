@@ -12,8 +12,10 @@ export class AuthController {
   @Post('login')
   @UseGuards(LocalAuthGuard)
   async login(@Request() req, @Body() loginUserDto: LoginUserDto) {
-    const { user } = req;
+    let { user } = req;
+    user = this.authService.sanitizeUser(user);
     const token = this.authService.generateJwtToken(user.email);
+
     return !token
       ? { message: 'Error al generar el token' }
       : { user, access_token: token };

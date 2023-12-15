@@ -17,7 +17,7 @@ import { EmailValidationService } from 'src/helper.service';
 @Injectable()
 export class UsersService {
   constructor(
-    @InjectModel(User.name) private userModel: Model<User>,
+    @InjectModel(User.name) public userModel: Model<User>,
     private readonly emailValidationService: EmailValidationService,
   ) {}
 

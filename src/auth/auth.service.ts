@@ -1,15 +1,13 @@
-// auth.service.ts
 import { Injectable } from '@nestjs/common';
 import { UsersService } from '../users/users.service';
-import * as bcrypt from 'bcrypt';
 import { JwtService } from '@nestjs/jwt';
-import { User } from 'src/users/interfaces/user';
+import * as bcrypt from 'bcrypt';
 
 @Injectable()
 export class AuthService {
   constructor(
     private readonly jwtService: JwtService,
-    private usersService: UsersService,
+    private readonly usersService: UsersService,
   ) {}
 
   async validateUser(email: string, password: string): Promise<any> {
@@ -32,10 +30,30 @@ export class AuthService {
     const user = await this.usersService.findByEmail(userEmail);
 
     if (!user) {
+      console.error('Usuario no encontrado');
       return null;
     }
 
     const payload = { sub: user.id, username: user.username }; // Puedes personalizar el contenido del token según tus necesidades
-    return this.jwtService.sign(payload);
+    const token = this.jwtService.sign(payload);
+
+    if (!token) {
+      console.error('Error al generar el token');
+      return null;
+    }
+  
+    console.log('Token generado:', token); // Agrega esta línea para imprimir el token
+  
+    return token;
+  }
+
+  // OCULTA PASSWORD DE LOS DATOS DEL USER A DEVOLVER -----
+  sanitizeUser(user: any): any {
+    if (user instanceof this.usersService.userModel) {
+      // Si es un documento Mongoose, conviértelo a un objeto simple
+      user = user.toObject();
+    }
+    const { password, ...sanitizedUser } = user;
+    return sanitizedUser;
   }
 }

@@ -6,13 +6,13 @@ import { AuthService } from '../auth.service';
 @Injectable()
 export class LocalStrategy extends PassportStrategy(Strategy) {
   constructor(private authService: AuthService) {
-    super({ usernameField: 'username' }); // usernameField siempre debe llamarse así. Se le pasa el nombre del campo con el que se va a hacer login
+    super({ usernameField: 'email' }); // usernameField siempre debe llamarse así. Se le pasa el nombre del campo con el que se va a hacer login
   }
 
-  async validate(username: string, password: string): Promise<any> {
-    const user = await this.authService.validateUser(username, password);
+  async validate(email: string, password: string): Promise<any> {
+    const user = await this.authService.validateUser(email, password);
     if (!user) {
-      throw new UnauthorizedException();
+      throw new UnauthorizedException("Usuario y/o contraseña no válidos");
     }
     return user;
   }
