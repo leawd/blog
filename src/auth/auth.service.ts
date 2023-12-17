@@ -34,16 +34,14 @@ export class AuthService {
       return null;
     }
 
-    const payload = { sub: user.id, username: user.username }; // Puedes personalizar el contenido del token según tus necesidades
+    const payload = { sub: user.id, username: user.username };
     const token = this.jwtService.sign(payload);
 
     if (!token) {
       console.error('Error al generar el token');
       return null;
     }
-  
-    console.log('Token generado:', token); // Agrega esta línea para imprimir el token
-  
+
     return token;
   }
 

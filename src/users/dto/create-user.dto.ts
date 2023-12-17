@@ -6,16 +6,16 @@ export class CreateUserDto {
     @IsString()
     @Length(5, 10)
     @ApiProperty({ description: 'Nombre de usuario (entre 5 y 10 caracteres)' })
-    readonly username: string;
+    username: string;
 
     @IsNotEmpty()
     @IsEmail()
     @ApiProperty({ description: 'Correo electrónico del usuario' })
-    readonly email: string;
+    email: string;
 
     @IsNotEmpty()
     @IsString()
     @Length(8, 20)
     @ApiProperty({ description: 'Contraseña del usuario (entre 8 y 20 caracteres)' })
-    readonly password: string;
+    password: string;
 }
