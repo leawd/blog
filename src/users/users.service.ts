@@ -23,8 +23,8 @@ export class UsersService {
 
   /**
    * Guarda registro de usuario en base de datos
-   * 
-   * @param createUserDto 
+   *
+   * @param createUserDto
    * @returns Promise<User>
    */
   async create(createUserDto: CreateUserDto): Promise<User> {
@@ -42,7 +42,10 @@ export class UsersService {
     }
 
     // email -----
-    if (!this.emailValidationService.validateEmail(createUserDto.email)) {
+    if (
+      !createUserDto.email ||
+      !this.emailValidationService.validateEmail(createUserDto.email)
+    ) {
       throw new HttpException(
         'El formato del correo electrónico no es válido',
         HttpStatus.BAD_REQUEST,
@@ -87,26 +90,43 @@ export class UsersService {
   }
 
   /**
-   * 
-   * @returns 
+   *
+   * @returns
    */
-  async findAll() {
+  async findAll(): Promise<User[]> {
     return this.userModel.find().lean();
   }
 
-  async findOne(id: string) {
+  async findOne(id: string): Promise<User> | null {
     return this.userModel.findOne({ _id: id }).lean();
   }
 
-  findByEmail(email: string) {
+  findByEmail(email: string): Promise<User> | null {
     return this.userModel.findOne({ email: email });
   }
 
-  async update(id: string, updateUserDto: UpdateUserDto): Promise<User> {
-    return this.userModel.updateOne({ _id: id }, UpdateUserDto).lean();
+  async update(id: string, updateUserDto: UpdateUserDto): Promise<User> | null {
+    // contraseña -----
+    if (updateUserDto.password.length < 8 || updateUserDto.password.length > 20)
+      throw new HttpException(
+        'La contraseña debe tener entre 8 y 20 caracteres',
+        HttpStatus.BAD_REQUEST,
+      );
+    // FIN VALIDACIONES -----
+
+    // GUARDAR CONTRASEÑA CON HASH -----
+    const hashedPassword = await bcrypt.hash(updateUserDto.password, 10);
+    const updatedUser = new this.userModel({
+      ...updateUserDto,
+      password: hashedPassword,
+    });
+
+    return this.userModel.updateOne({ _id: id }, updatedUser)
+      ? this.userModel.findById(id).lean()
+      : null;
   }
 
-  async remove(id: string): Promise<User> {
+  async remove(id: string): Promise<User> | null {
     return this.userModel.deleteOne({ _id: id }).lean();
   }
 }

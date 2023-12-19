@@ -1,4 +1,4 @@
-export interface User {
+export interface Post {
     title: string;
     user_id: string;
     content: string;

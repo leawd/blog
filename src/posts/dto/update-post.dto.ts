@@ -1,7 +1,7 @@
 import { ApiProperty } from "@nestjs/swagger";
 import { ArrayNotEmpty, IsArray, IsNotEmpty, IsOptional, IsString, Length } from "class-validator";
 
-export class UpdateUserDto{
+export class UpdatePostDto{
     @IsOptional()
     @IsNotEmpty()
     @IsString()

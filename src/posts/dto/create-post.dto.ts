@@ -8,7 +8,7 @@ import {
   ArrayNotEmpty,
 } from 'class-validator';
 
-export class CreateUserDto {
+export class CreatePostDto {
   @IsNotEmpty()
   @IsString()
   @Length(20, 150)

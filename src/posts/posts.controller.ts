@@ -9,44 +9,44 @@ import {
   HttpException,
   HttpStatus,
 } from '@nestjs/common';
-import { UsersService } from './posts.service';
-import { CreateUserDto } from './dto/create-post.dto';
-import { UpdateUserDto } from './dto/update-post.dto';
-import { User } from './interfaces/posts';
+import { PostsService } from './posts.service';
+import { CreatePostDto } from './dto/create-post.dto';
+import { UpdatePostDto } from './dto/update-post.dto';
+import { Post as PostInterface } from './interfaces/posts';
 import { ApiTags, ApiOperation, ApiBody, ApiParam } from '@nestjs/swagger';
 
 @ApiTags('posts')
 @Controller('posts')
-export class UsersController {
-  constructor(private readonly usersService: UsersService) {}
+export class PostsController {
+  constructor(private readonly postsService: PostsService) {}
 
   @Post()
-  @ApiOperation({ summary: 'Crear un nuevo usuario' })
-  @ApiBody({ type: CreateUserDto, description: 'Datos del usuario a crear' })
-  create(@Body() createUserDto: CreateUserDto) {
-    return this.usersService.create(createUserDto);
+  @ApiOperation({ summary: 'Crear un nuevo post' })
+  @ApiBody({ type: CreatePostDto, description: 'Datos del post a crear' })
+  create(@Body() createPostDto: CreatePostDto) {
+    return this.postsService.create(createPostDto);
   }
 
   @Get()
-  findAll(): Promise<User[]> {
-    return this.usersService.findAll();
+  findAll(): Promise<PostInterface[]>|null {
+    return this.postsService.findAll();
   }
 
   @Get(':id')
-  findOne(@Param('id') id: string): Promise<User> {
-    return this.usersService.findOne(id);
+  findOne(@Param('id') id: string): Promise<PostInterface>|null {
+    return this.postsService.findOne(id);
   }
 
   @Patch(':id')
   update(
     @Param('id') id: string,
-    @Body() updateUserDto: UpdateUserDto,
-  ): Promise<User> {
-    return this.usersService.update(id, updateUserDto);
+    @Body() updatePostDto: UpdatePostDto,
+  ): Promise<PostInterface>|null {
+    return this.postsService.update(id, updatePostDto);
   }
 
   @Delete(':id')
-  remove(@Param('id') id: string): Promise<User> {
-    return this.usersService.remove(id);
+  remove(@Param('id') id: string): Promise<PostInterface>|null {
+    return this.postsService.remove(id);
   }
 }
