@@ -1,20 +1,26 @@
-import {Body, ConflictException, HttpException, HttpStatus, Injectable, NotFoundException, ValidationPipe, } from '@nestjs/common';
+import {
+  HttpException,
+  HttpStatus,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Document, Model, MongooseError } from 'mongoose';
 import { CreatePostDto } from './dto/create-post.dto';
 import { UpdatePostDto } from './dto/update-post.dto';
 import { Post } from './schemas/posts.schema';
+import { UsersService } from '../users/users.service';
 
 @Injectable()
 export class PostsService {
+  private titleLengthMin = 20;
+  private titleLengthMax = 150;
+  private contentLengthMin = 500;
+  private contentLengthMax = 10000;
+
   constructor(
     @InjectModel(Post.name) public postModel: Model<Post>,
-    private readonly titleLengthMin: 20,
-    private readonly titleLengthMax: 150,
-    private readonly contentLengthMin: 500,
-    private readonly contentLengthMax: 10000,
-    private postsService: PostsService,
-    // private readonly emailValidationService: EmailValidationService,
+    private usersService: UsersService,
   ) {}
 
   /**
@@ -50,7 +56,7 @@ export class PostsService {
     }
 
     // autor -----
-    const user = await this.postsService.findOne(createPostDto.user_id);
+    const user = await this.usersService.findOne(createPostDto.user_id);
     if (!user) {
       throw new NotFoundException('Autor no encontrado');
     }
@@ -58,7 +64,7 @@ export class PostsService {
     // categorías -----
     if (!createPostDto.categories || createPostDto.categories.length == 0) {
       throw new HttpException(
-        `Debe idnicar al menos 1 categoría para el post`,
+        `Debe indicar al menos 1 categoría para el post`,
         HttpStatus.BAD_REQUEST,
       );
     }
@@ -92,7 +98,7 @@ export class PostsService {
   }
 
   async update(id: string, updatePostDto: UpdatePostDto): Promise<Post> {
-    return this.postModel.updateOne({ _id: id }, UpdatePostDto).lean();
+    return this.postModel.updateOne({ _id: id }, updatePostDto).lean();
   }
 
   async remove(id: string): Promise<Post> {

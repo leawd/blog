@@ -3,16 +3,17 @@ import { MongooseModule } from '@nestjs/mongoose';
 import { PostsService } from './posts.service';
 import { PostsController } from './posts.controller';
 import { Post, PostSchema } from './schemas/posts.schema';
-import { EmailValidationService } from 'src/helper.service';
+import { UsersModule } from 'src/users/users.module';
 
 @Module({
   imports: [
     MongooseModule.forFeature([
       { name: Post.name, schema: PostSchema },
     ]),
+    UsersModule,
   ],
   controllers: [PostsController],
-  providers: [PostsService, EmailValidationService],
+  providers: [PostsService],
   exports: [PostsService],
 })
 export class PostsModule {}
