@@ -1,7 +1,9 @@
-import { Injectable } from '@nestjs/common';
+import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { UsersService } from '../users/users.service';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
+import { SanitizedUser } from 'src/users/interfaces/sanitizedUser';
+import { User } from 'src/users/interfaces/user';
 
 @Injectable()
 export class AuthService {
@@ -11,12 +13,18 @@ export class AuthService {
   ) {}
 
   async validateUser(email: string, password: string): Promise<any> {
-    const user = await this.usersService.findByEmail(email);
+    try {
+      const user = await this.usersService.findByEmail(email);
 
-    if (user && bcrypt.compareSync(password, user.password)) {
-      // Elimina la contraseña antes de devolver el usuario -----
-      const { password, ...result } = user;
-      return result;
+      console.log(user);
+      if (user && bcrypt.compareSync(password, user.password)) {
+        // Elimina la contraseña antes de devolver el usuario -----
+        const { password, ...result } = user;
+        return result;
+      }
+    } catch (error) {
+      console.log(error);
+      throw new HttpException(error.message, HttpStatus.INTERNAL_SERVER_ERROR);
     }
 
     return null;
@@ -26,27 +34,26 @@ export class AuthService {
     return this.usersService.findOne(userId);
   }
 
-  async generateJwtToken(userEmail: string): Promise<string | null> {
-    const user = await this.usersService.findByEmail(userEmail);
+  async generateJwtToken(userEmail: string): Promise<string> {
+    try {
+      const user = await this.usersService.findByEmail(userEmail);
 
-    if (!user) {
-      console.error('Usuario no encontrado');
-      return null;
+      if (!user) throw new Error('Usuario no encontrado');
+
+      const payload = { username: user.username };
+      const token = this.jwtService.sign(payload);
+
+      if (!token) throw new Error('Error al generar el token');
+
+      return token;
+    } catch (error) {
+      console.log(error);
+      throw new HttpException(error.message, HttpStatus.INTERNAL_SERVER_ERROR);
     }
-
-    const payload = { username: user.username };
-    const token = this.jwtService.sign(payload);
-
-    if (!token) {
-      console.error('Error al generar el token');
-      return null;
-    }
-
-    return token;
   }
 
   // OCULTA PASSWORD DE LOS DATOS DEL USER A DEVOLVER -----
-  sanitizeUser(user: any): any {
+  sanitizeUser(user: User): SanitizedUser {
     if (user instanceof this.usersService.userModel) {
       // Si es un documento Mongoose, conviértelo a un objeto simple
       user = user.toObject();
