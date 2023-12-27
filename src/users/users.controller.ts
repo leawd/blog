@@ -12,6 +12,7 @@ import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { User } from './interfaces/user';
 import { ApiTags, ApiOperation, ApiBody, ApiParam } from '@nestjs/swagger';
+import { SanitizedUser } from './interfaces/sanitizedUser';
 
 @ApiTags('users')
 @Controller('users')
@@ -39,7 +40,7 @@ export class UsersController {
   update(
     @Param('id') id: string,
     @Body() updateUserDto: UpdateUserDto,
-  ): Promise<User>|null {
+  ): Promise<SanitizedUser>|null {
     return this.usersService.update(id, updateUserDto);
   }
 

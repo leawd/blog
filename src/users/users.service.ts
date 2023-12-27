@@ -1,9 +1,11 @@
 import {
+  BadRequestException,
   Body,
   ConflictException,
   HttpException,
   HttpStatus,
   Injectable,
+  NotFoundException,
   ValidationPipe,
 } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
@@ -13,6 +15,7 @@ import { UpdateUserDto } from './dto/update-user.dto';
 import { User } from './schemas/user.schema';
 import * as bcrypt from 'bcrypt';
 import { EmailValidationService } from 'src/helper.service';
+import { SanitizedUser } from './interfaces/sanitizedUser';
 
 @Injectable()
 export class UsersService {
@@ -105,25 +108,75 @@ export class UsersService {
     return this.userModel.findOne({ email: email });
   }
 
-  async update(id: string, updateUserDto: UpdateUserDto): Promise<User> | null {
+  private isValidRoles(roles: string[]): boolean {
+    const allowedRoles = ['USER', 'ADMIN'];
+    return roles.every((role) => allowedRoles.includes(role));
+  }
+
+  async update(id: string, updateUserDto: UpdateUserDto): Promise<SanitizedUser> | null {
+    let user = await this.userModel.findById(id);
+    if (!user) {
+      throw new NotFoundException('Usuario no encontrado');
+    }
+
     // contraseña -----
-    if (updateUserDto.password.length < 8 || updateUserDto.password.length > 20)
+    if (updateUserDto.password) {
+      console.log('xxxxxxxxx');
+      if (
+        updateUserDto.password.length < 8 ||
+        updateUserDto.password.length > 20
+      ) {
+        throw new HttpException(
+          'La contraseña debe tener entre 8 y 20 caracteres',
+          HttpStatus.BAD_REQUEST,
+        );
+      }
+
+      // GUARDAR CONTRASEÑA CON HASH -----
+      const hashedPassword = await bcrypt.hash(updateUserDto.password, 10);
+      user = new this.userModel({
+        ...updateUserDto,
+        password: hashedPassword,
+      });
+    }
+
+    // roles -----
+    if (updateUserDto.roles) {
+      if (!this.isValidRoles(updateUserDto.roles)) {
+        throw new BadRequestException('Roles no válidos');
+      }
+      user.roles = updateUserDto.roles;
+    }
+
+    // username -----
+    if (updateUserDto.username) {
+      console.log('zzzzzzzzzzz');
+      user.username = updateUserDto.username;
+    }
+
+    // email -----
+    if (updateUserDto.email) {
+      console.log('aaaaaaaaaa');
+      user.email = updateUserDto.email;
+    }
+    // Actualizar el usuario usando updateOne
+    const updateResult = await this.userModel.updateOne({ _id: id }, user);
+
+    if (updateResult) {
+      const updatedUser = await this.userModel.findById(id);
+
+      let u = updatedUser.toObject();
+    
+    const { password, ...sanitizedUser } = u;
+
+
+      return sanitizedUser ? sanitizedUser : null;
+    } else {
       throw new HttpException(
-        'La contraseña debe tener entre 8 y 20 caracteres',
-        HttpStatus.BAD_REQUEST,
+        'Error al actualizar el usuario',
+        HttpStatus.INTERNAL_SERVER_ERROR,
       );
-    // FIN VALIDACIONES -----
-
-    // GUARDAR CONTRASEÑA CON HASH -----
-    const hashedPassword = await bcrypt.hash(updateUserDto.password, 10);
-    const updatedUser = new this.userModel({
-      ...updateUserDto,
-      password: hashedPassword,
-    });
-
-    return this.userModel.updateOne({ _id: id }, updatedUser)
-      ? this.userModel.findById(id).lean()
-      : null;
+    }
   }
 
   async remove(id: string): Promise<User> | null {

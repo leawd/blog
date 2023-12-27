@@ -53,12 +53,12 @@ export class AuthService {
   }
 
   // OCULTA PASSWORD DE LOS DATOS DEL USER A DEVOLVER -----
-  sanitizeUser(user: User): SanitizedUser {
+  sanitizeUser(user): SanitizedUser {
     if (user instanceof this.usersService.userModel) {
       // Si es un documento Mongoose, conviértelo a un objeto simple
       user = user.toObject();
     }
-    const { password, ...sanitizedUser } = user;
+    const { password, ...sanitizedUser } = user._doc;
     return sanitizedUser;
   }
 }

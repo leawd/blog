@@ -1,5 +1,5 @@
 import { ApiProperty } from "@nestjs/swagger";
-import { IsEmail, IsNotEmpty, IsString, Length } from "class-validator";
+import { ArrayNotEmpty, IsArray, IsEmail, IsIn, IsNotEmpty, IsString, Length } from "class-validator";
 
 export class UpdateUserDto{
     @IsNotEmpty()
@@ -18,4 +18,11 @@ export class UpdateUserDto{
     @Length(8, 20)
     @ApiProperty({ description: 'Contraseña del usuario (entre 8 y 20 caracteres)' })
     password?: string;
+
+    @IsArray()
+    @ArrayNotEmpty()
+    @IsString({ each: true })
+    @IsIn(['USER', 'ADMIN'], { each: true, message: 'Roles no válidos' })
+    @ApiProperty({description: 'Los roles admitidos son ADMIN o USER'})
+    roles?: string[];
 }
