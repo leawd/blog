@@ -6,6 +6,9 @@ import {
   Param,
   Delete,
   Put,
+  UseGuards,
+  Req,
+  ForbiddenException,
 } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { CreateUserDto } from './dto/create-user.dto';
@@ -13,6 +16,8 @@ import { UpdateUserDto } from './dto/update-user.dto';
 import { User } from './interfaces/user';
 import { ApiTags, ApiOperation, ApiBody, ApiParam } from '@nestjs/swagger';
 import { SanitizedUser } from './interfaces/sanitizedUser';
+import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
+import { AdminAuthGuard } from 'src/auth/guards/admin.guard';
 
 @ApiTags('users')
 @Controller('users')
@@ -37,10 +42,18 @@ export class UsersController {
   }
 
   @Put(':id')
+  @UseGuards(JwtAuthGuard, AdminAuthGuard)
   update(
     @Param('id') id: string,
     @Body() updateUserDto: UpdateUserDto,
+    @Req() req
   ): Promise<SanitizedUser>|null {
+    // controlo que sea ADMIN o el usuario del perfil que se esté tratando de actualizar -----
+    const user = req.user;
+    if (!user.roles.includes('ADMIN')) {
+      throw new ForbiddenException('No tienes permisos para realizar esta acción');
+    }
+
     return this.usersService.update(id, updateUserDto);
   }
 

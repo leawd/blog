@@ -40,7 +40,7 @@ export class AuthService {
 
       if (!user) throw new Error('Usuario no encontrado');
 
-      const payload = { username: user.username };
+      const payload = { sub: user._id, username: user.username };
       const token = this.jwtService.sign(payload);
 
       if (!token) throw new Error('Error al generar el token');

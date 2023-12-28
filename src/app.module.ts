@@ -6,9 +6,11 @@ import { MongooseModule } from '@nestjs/mongoose';
 import { EmailValidationService } from './helper.service';
 import { AuthModule } from './auth/auth.module';
 import { PostsModule } from './posts/posts.module';
+import { ConfigModule } from '@nestjs/config';
 
 @Module({
   imports: [
+    ConfigModule.forRoot(),
     MongooseModule.forRoot('mongodb://127.0.0.1:27017', {
       dbName: 'blog',
     }),

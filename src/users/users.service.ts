@@ -121,7 +121,6 @@ export class UsersService {
 
     // contraseña -----
     if (updateUserDto.password) {
-      console.log('xxxxxxxxx');
       if (
         updateUserDto.password.length < 8 ||
         updateUserDto.password.length > 20
@@ -134,10 +133,7 @@ export class UsersService {
 
       // GUARDAR CONTRASEÑA CON HASH -----
       const hashedPassword = await bcrypt.hash(updateUserDto.password, 10);
-      user = new this.userModel({
-        ...updateUserDto,
-        password: hashedPassword,
-      });
+      user.password = hashedPassword;
     }
 
     // roles -----
@@ -150,13 +146,11 @@ export class UsersService {
 
     // username -----
     if (updateUserDto.username) {
-      console.log('zzzzzzzzzzz');
       user.username = updateUserDto.username;
     }
 
     // email -----
     if (updateUserDto.email) {
-      console.log('aaaaaaaaaa');
       user.email = updateUserDto.email;
     }
     // Actualizar el usuario usando updateOne
