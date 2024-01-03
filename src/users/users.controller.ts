@@ -42,14 +42,15 @@ export class UsersController {
   }
 
   @Put(':id')
-  @UseGuards(JwtAuthGuard, AdminAuthGuard)
-  update(
+  // @UseGuards(JwtAuthGuard, AdminAuthGuard)
+  async update(
     @Param('id') id: string,
     @Body() updateUserDto: UpdateUserDto,
     @Req() req
   ): Promise<SanitizedUser>|null {
     // controlo que sea ADMIN o el usuario del perfil que se esté tratando de actualizar -----
-    const user = req.user;
+    const user = await this.usersService.findOne(id);
+
     if (!user.roles.includes('ADMIN')) {
       throw new ForbiddenException('No tienes permisos para realizar esta acción');
     }

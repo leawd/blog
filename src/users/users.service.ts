@@ -9,13 +9,14 @@ import {
   ValidationPipe,
 } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { Document, Model, MongooseError } from 'mongoose';
+import { Document, Model, MongooseError, Types } from 'mongoose';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { User } from './schemas/user.schema';
 import * as bcrypt from 'bcrypt';
 import { EmailValidationService } from 'src/helper.service';
 import { SanitizedUser } from './interfaces/sanitizedUser';
+import { ObjectId } from 'mongodb';
 
 @Injectable()
 export class UsersService {
@@ -101,7 +102,13 @@ export class UsersService {
   }
 
   async findOne(id: string): Promise<User> | null {
-    return this.userModel.findOne({ _id: id }).lean();
+    try {
+      const objectId = new ObjectId(id);
+      return await this.userModel.findOne({ _id: objectId }).lean();
+    } catch (error) {
+      console.error('Error al buscar usuario:', error);
+      return null;
+    }
   }
 
   findByEmail(email: string): Promise<User> | null {
@@ -113,8 +120,11 @@ export class UsersService {
     return roles.every((role) => allowedRoles.includes(role));
   }
 
-  async update(id: string, updateUserDto: UpdateUserDto): Promise<SanitizedUser> | null {
-    let user = await this.userModel.findById(id);
+  async update(
+    id: string,
+    updateUserDto: UpdateUserDto,
+  ): Promise<SanitizedUser> | null {
+    let user = await this.findOne(id);
     if (!user) {
       throw new NotFoundException('Usuario no encontrado');
     }
@@ -157,12 +167,9 @@ export class UsersService {
     const updateResult = await this.userModel.updateOne({ _id: id }, user);
 
     if (updateResult) {
-      const updatedUser = await this.userModel.findById(id);
+      const updatedUser = await this.findOne(id);
 
-      let u = updatedUser.toObject();
-    
-    const { password, ...sanitizedUser } = u;
-
+      const { password, ...sanitizedUser } = updatedUser;
 
       return sanitizedUser ? sanitizedUser : null;
     } else {

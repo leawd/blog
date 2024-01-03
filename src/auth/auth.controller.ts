@@ -13,7 +13,9 @@ export class AuthController {
     let { user } = req;
     user = this.authService.sanitizeUser(user);
     const token = await this.authService.generateJwtToken(user.email);
-    
+
+    console.log('user', user, 'access_token', token);
+
     return !token
       ? { message: 'Error al generar el token' }
       : { user, access_token: token };
