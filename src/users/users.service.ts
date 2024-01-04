@@ -16,7 +16,7 @@ import { User } from './schemas/user.schema';
 import * as bcrypt from 'bcrypt';
 import { EmailValidationService } from 'src/helper.service';
 import { SanitizedUser } from './interfaces/sanitizedUser';
-import { ObjectId } from 'mongodb';
+import { MongoError, ObjectId } from 'mongodb';
 
 @Injectable()
 export class UsersService {
@@ -124,57 +124,70 @@ export class UsersService {
     id: string,
     updateUserDto: UpdateUserDto,
   ): Promise<SanitizedUser> | null {
-    let user = await this.findOne(id);
-    if (!user) {
-      throw new NotFoundException('Usuario no encontrado');
-    }
+    try {
+      let user = await this.findOne(id);
+      
+      if (!user ) {
+        throw new NotFoundException('Usuario no encontrado');
+      }
 
-    // contraseña -----
-    if (updateUserDto.password) {
-      if (
-        updateUserDto.password.length < 8 ||
-        updateUserDto.password.length > 20
-      ) {
+      // contraseña -----
+      if (updateUserDto.password) {
+        if (
+          updateUserDto.password.length < 8 ||
+          updateUserDto.password.length > 20
+        ) {
+          throw new HttpException(
+            'La contraseña debe tener entre 8 y 20 caracteres',
+            HttpStatus.BAD_REQUEST,
+          );
+        }
+
+        // GUARDAR CONTRASEÑA CON HASH -----
+        const hashedPassword = await bcrypt.hash(updateUserDto.password, 10);
+        user.password = hashedPassword;
+      }
+
+      // roles -----
+      if (updateUserDto.roles) {
+        if (!this.isValidRoles(updateUserDto.roles)) {
+          throw new BadRequestException('Roles no válidos');
+        }
+        user.roles = updateUserDto.roles;
+      }
+
+      // username -----
+      if (updateUserDto.username) {
+        user.username = updateUserDto.username;
+      }
+
+      // email -----
+      if (updateUserDto.email) {
+        user.email = updateUserDto.email;
+      }
+
+      // Actualizar el usuario usando updateOne -----
+      const objectId = new ObjectId(id);
+      let updatedUser = await this.userModel.findOneAndUpdate(
+        { _id: objectId },
+        { $set: updateUserDto },
+        { new: true, lean: true },
+      );
+
+      if (updatedUser) {
+        const { password, ...sanitizedUser } = updatedUser;
+        return sanitizedUser;
+      } else {
         throw new HttpException(
-          'La contraseña debe tener entre 8 y 20 caracteres',
-          HttpStatus.BAD_REQUEST,
+          'Error al actualizar el usuario: el documento no se actualizó',
+          HttpStatus.INTERNAL_SERVER_ERROR,
         );
       }
-
-      // GUARDAR CONTRASEÑA CON HASH -----
-      const hashedPassword = await bcrypt.hash(updateUserDto.password, 10);
-      user.password = hashedPassword;
-    }
-
-    // roles -----
-    if (updateUserDto.roles) {
-      if (!this.isValidRoles(updateUserDto.roles)) {
-        throw new BadRequestException('Roles no válidos');
-      }
-      user.roles = updateUserDto.roles;
-    }
-
-    // username -----
-    if (updateUserDto.username) {
-      user.username = updateUserDto.username;
-    }
-
-    // email -----
-    if (updateUserDto.email) {
-      user.email = updateUserDto.email;
-    }
-    // Actualizar el usuario usando updateOne
-    const updateResult = await this.userModel.updateOne({ _id: id }, user);
-
-    if (updateResult) {
-      const updatedUser = await this.findOne(id);
-
-      const { password, ...sanitizedUser } = updatedUser;
-
-      return sanitizedUser ? sanitizedUser : null;
-    } else {
+      
+    } catch (error) {
+      console.error('Error al actualizar el usuario:', error);
       throw new HttpException(
-        'Error al actualizar el usuario',
+        'Error al actualizar el usuario: consulte los registros para obtener más información',
         HttpStatus.INTERNAL_SERVER_ERROR,
       );
     }

@@ -3,13 +3,17 @@ import { UsersService } from '../users/users.service';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
 import { SanitizedUser } from 'src/users/interfaces/sanitizedUser';
-import { User } from 'src/users/interfaces/user';
+import { Request } from 'express';
+import * as jwt from 'jsonwebtoken';
+import { ConfigService } from '@nestjs/config';
+import { JwtPayload } from './interfaces/JwtPayload';
 
 @Injectable()
 export class AuthService {
   constructor(
     private readonly jwtService: JwtService,
     private readonly usersService: UsersService,
+    private readonly configService: ConfigService,
   ) {}
 
   async validateUser(email: string, password: string): Promise<any> {
@@ -55,10 +59,36 @@ export class AuthService {
   // OCULTA PASSWORD DE LOS DATOS DEL USER A DEVOLVER -----
   sanitizeUser(user): SanitizedUser {
     if (user instanceof this.usersService.userModel) {
-      // Si es un documento Mongoose, conviértelo a un objeto simple
+      // Si es un documento Mongoose, conviértelo a un objeto simple -----
       user = user.toObject();
     }
     const { password, ...sanitizedUser } = user._doc;
     return sanitizedUser;
+  }
+
+  // Extraigo el token del authorization -----
+  extractTokenFromBearerHeader(request: Request): string | null {
+    const authHeader = request.headers.authorization;
+
+    if (!authHeader) {
+      return null; // No hay encabezado de autorización presente -----
+    }
+
+    const [bearer, token] = authHeader.split(' ');
+
+    if (bearer !== 'Bearer' || !token) {
+      return null; // El encabezado no está en el formato esperado -----
+    }
+
+    return token;
+  }
+
+  extractUserIdFromToken(token: string): string {
+    const jwtSecret = this.configService.get<string>(
+      'JWT_SECRET',
+    );
+
+    const decodedToken = jwt.verify(token, jwtSecret) as JwtPayload;
+    return decodedToken.userId;
   }
 }
