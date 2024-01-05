@@ -51,12 +51,13 @@ export class UsersController {
     @Body() updateUserDto: UpdateUserDto,
     @Req() req,
   ): Promise<SanitizedUser> | null {
-    // controlo que el usuario que hizo la llamada esté autorizado -----
+    const user = req.user;
+    
+    // Verificar si el usuario es un administrador o el creador del post
+    const isAdmin = user.roles.includes('ADMIN');
+    const isUser = id === user.id;
 
-    // controlo que sea ADMIN o el usuario del perfil que se esté tratando de actualizar -----
-    const user = await this.usersService.findOne(id);
-
-    if (!user.roles.includes('ADMIN')) {
+    if (!isAdmin && !isUser) {
       throw new ForbiddenException(
         'No tienes permisos para realizar esta acción',
       );

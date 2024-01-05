@@ -104,4 +104,9 @@ export class PostsService {
   async remove(id: string): Promise<Post> {
     return this.postModel.deleteOne({ _id: id }).lean();
   }
+
+  async getPostsByUser(userId: string): Promise<Post[]> {
+    // Recupera los posts del usuario específico por su userId
+    return this.postModel.find({ user_id: userId }).exec();
+  }
 }
