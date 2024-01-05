@@ -77,6 +77,8 @@ export class PostsController {
     return this.postsService.remove(id);
   }
 
+
+  // obtener por userid -----
   @Get('user/:userId')
   async getPostsByUser(@Param('userId') userId: string) {
     const posts = await this.postsService.getPostsByUser(userId);
