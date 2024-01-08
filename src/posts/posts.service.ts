@@ -110,4 +110,25 @@ export class PostsService {
     // Recupera los posts del usuario específico por su userId
     return this.postModel.find({ user_id: userId }).exec();
   }
+
+  // Búsqueda de posts -----
+  async searchPosts(
+    query: string,
+    pagination: { page: number; limit: number },
+  ) {
+    const results = await this.postModel
+      .find({
+        $or: [
+          { title: { $regex: query, $options: 'i' } }, // Case-insensitive  -----
+          { user_id: { $regex: query, $options: 'i' } },
+          { content: { $regex: query, $options: 'i' } },
+          { categories: { $in: [query] } },
+        ],
+      })
+      .skip((pagination.page - 1) * pagination.limit)
+      .limit(pagination.limit)
+      .exec();
+
+    return results;
+  }
 }

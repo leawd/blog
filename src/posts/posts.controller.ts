@@ -12,6 +12,9 @@ import {
   UseGuards,
   ForbiddenException,
   Req,
+  Query,
+  DefaultValuePipe,
+  ParseIntPipe,
 } from '@nestjs/common';
 import { PostsService } from './posts.service';
 import { CreatePostDto } from './dto/create-post.dto';
@@ -29,6 +32,17 @@ export class PostsController {
     private readonly postsService: PostsService,
     private readonly usersService: UsersService,
   ) {}
+
+  // búsqueda de posts, lo puse primero porque sino daba ----
+  // error la url con la de GET por :id -----
+  @Get('search')
+  searchPosts(
+    @Query('query') query: string,
+    @Query('page', new DefaultValuePipe(1), ParseIntPipe) page: number,
+    @Query('limit', new DefaultValuePipe(10), ParseIntPipe) limit: number,
+  ) {    
+    return this.postsService.searchPosts(query, { page, limit });
+  }
 
   @Post()
   @ApiOperation({ summary: 'Crear un nuevo post' })
@@ -84,4 +98,5 @@ export class PostsController {
     const posts = await this.postsService.getPostsByUser(userId);
     return posts;
   }
+
 }
