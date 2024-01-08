@@ -40,8 +40,19 @@ export class PostsController {
     @Query('query') query: string,
     @Query('page', new DefaultValuePipe(1), ParseIntPipe) page: number,
     @Query('limit', new DefaultValuePipe(10), ParseIntPipe) limit: number,
-  ) {    
+  ) {
     return this.postsService.searchPosts(query, { page, limit });
+  }
+
+  // ENDPOINT para obtener por categoría -----
+  @Get('category/:category')
+  getPostsByCategory(
+    @Param('category') category: string,
+    @Query('page', new DefaultValuePipe(1), ParseIntPipe) page: number,
+    @Query('limit', new DefaultValuePipe(10), ParseIntPipe) limit: number,
+  ) {
+    // Llama a la función en el servicio para obtener posts por categoría
+    return this.postsService.getPostsByCategory(category, { page, limit });
   }
 
   @Post()
@@ -70,7 +81,7 @@ export class PostsController {
   ): Promise<PostInterface> | null {
     // Obtener el usuario desde el token JWT -----
     const user = req.user;
-    
+
     const post = await this.postsService.findOne(id);
 
     // Verificar si el usuario es un administrador o el creador del post
@@ -91,12 +102,10 @@ export class PostsController {
     return this.postsService.remove(id);
   }
 
-
   // obtener por userid -----
   @Get('user/:userId')
   async getPostsByUser(@Param('userId') userId: string) {
     const posts = await this.postsService.getPostsByUser(userId);
     return posts;
   }
-
 }

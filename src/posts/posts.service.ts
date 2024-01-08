@@ -131,4 +131,18 @@ export class PostsService {
 
     return results;
   }
+
+  // obtener posts de una categoría dada -----
+  async getPostsByCategory(
+    category: string,
+    pagination: { page: number; limit: number },
+  ) {
+    const results = await this.postModel
+      .find({ categories: category })
+      .skip((pagination.page - 1) * pagination.limit)
+      .limit(pagination.limit)
+      .exec();
+
+    return results;
+  }
 }
