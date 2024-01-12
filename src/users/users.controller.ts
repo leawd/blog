@@ -18,7 +18,6 @@ import { ApiTags, ApiOperation, ApiBody, ApiParam } from '@nestjs/swagger';
 import { SanitizedUser } from './interfaces/sanitizedUser';
 import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
 import { AdminAuthGuard } from 'src/auth/guards/admin.guard';
-import * as jwt from 'jsonwebtoken';
 
 @ApiTags('users')
 @Controller('users')

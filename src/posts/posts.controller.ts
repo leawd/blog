@@ -15,6 +15,7 @@ import {
   Query,
   DefaultValuePipe,
   ParseIntPipe,
+  BadRequestException,
 } from '@nestjs/common';
 import { PostsService } from './posts.service';
 import { CreatePostDto } from './dto/create-post.dto';
@@ -44,16 +45,27 @@ export class PostsController {
     return this.postsService.searchPosts(query, { page, limit });
   }
 
-  // ENDPOINT para obtener por categoría -----
-  @Get('category/:category')
-  getPostsByCategory(
-    @Param('category') category: string,
-    @Query('page', new DefaultValuePipe(1), ParseIntPipe) page: number,
-    @Query('limit', new DefaultValuePipe(10), ParseIntPipe) limit: number,
+
+  @Get('filter')
+  async filterPosts(
+    @Query('type') type: string,
+    @Query('query') query: string,
   ) {
-    // Llama a la función en el servicio para obtener posts por categoría
-    return this.postsService.getPostsByCategory(category, { page, limit });
+    try {
+      const results = await this.postsService.searchPostsByType(type, query);
+      return results;
+    } catch (error) {
+      // Manejar errores específicos si es necesario
+      throw new BadRequestException(error.message);
+    }
   }
+
+
+
+
+
+
+
 
   @Post()
   @ApiOperation({ summary: 'Crear un nuevo post' })
