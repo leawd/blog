@@ -34,6 +34,8 @@ export class UsersController {
   }
 
   @Get()
+  @UseGuards(AdminAuthGuard)
+  @ApiOperation({ summary: 'Obtener listado de todos los usuarios. Solo los usuarios ADMIN pueden acceder.' })
   findAll(): Promise<User[]> {
     return this.usersService.findAll();
   }

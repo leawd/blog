@@ -61,12 +61,6 @@ export class PostsController {
   }
 
 
-
-
-
-
-
-
   @Post()
   @ApiOperation({ summary: 'Crear un nuevo post' })
   @ApiBody({ type: CreatePostDto, description: 'Datos del post a crear' })
