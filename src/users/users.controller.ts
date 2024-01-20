@@ -41,16 +41,6 @@ export class UsersController {
     return this.usersService.findAll();
   }
 
-  @Get('admin/users')
-  @UseGuards(JwtAuthGuard, AdminAuthGuard)
-  @ApiOperation({
-    summary:
-      'Obtener listado de todos los usuarios. Solo los usuarios ADMIN pueden acceder. NOTA: A pedido de la documentación hace lo mismo que la ruta "/users"',
-  })
-  adminFindAll(): Promise<User[]> {
-    return this.usersService.findAll();
-  }
-
   @Get(':id')
   @ApiOperation({ summary: 'Obtener un usuario por su identificador' })
   findOne(@Param('id') id: string): Promise<User> | null {
@@ -89,15 +79,6 @@ export class UsersController {
   @UseGuards(JwtAuthGuard, AdminAuthGuard)
   @ApiOperation({ summary: 'Eliminar un usuario. Solo para usuarios ADMIN.' })
   remove(@Param('id') id: string): Promise<User> | null {
-    return this.usersService.remove(id);
-  }
-  @Delete('admin/users/:id')
-  @UseGuards(JwtAuthGuard, AdminAuthGuard)
-  @ApiOperation({
-    summary:
-      'Eliminar un usuario. Solo para usuarios ADMIN. NOTA: A pedido de la documentación hace lo mismo que la ruta delete de users',
-  })
-  adminUserRemove(@Param('id') id: string): Promise<User> | null {
     return this.usersService.remove(id);
   }
 }
