@@ -11,6 +11,7 @@ import { User } from './interfaces/user';
 import { ApiTags, ApiOperation, ApiBody, ApiParam } from '@nestjs/swagger';
 import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
 import { AdminAuthGuard } from 'src/auth/guards/admin.guard';
+import { Post } from 'src/posts/schemas/posts.schema';
 
 @ApiTags('admin')
 @Controller('admin')
@@ -30,7 +31,8 @@ export class AdminsController {
   @Delete('/user/:id')
   @UseGuards(JwtAuthGuard, AdminAuthGuard)
   @ApiOperation({ summary: 'Eliminar un usuario. Solo para usuarios ADMIN. NOTA: A pedido de la documentación hace lo mismo que la ruta delete de users', })
-  remove(@Param('id') id: string): Promise<User> | null {
+  remove(@Param('id') id: string): Promise<User> {
     return this.usersService.remove(id);
   }
+
 }

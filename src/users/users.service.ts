@@ -126,8 +126,8 @@ export class UsersService {
   ): Promise<SanitizedUser> | null {
     try {
       let user = await this.findOne(id);
-      
-      if (!user ) {
+
+      if (!user) {
         throw new NotFoundException('Usuario no encontrado');
       }
 
@@ -183,7 +183,6 @@ export class UsersService {
           HttpStatus.INTERNAL_SERVER_ERROR,
         );
       }
-      
     } catch (error) {
       console.error('Error al actualizar el usuario:', error);
       throw new HttpException(
@@ -193,7 +192,15 @@ export class UsersService {
     }
   }
 
-  async remove(id: string): Promise<User> | null {
-    return this.userModel.deleteOne({ _id: id }).lean();
+  async remove(id: string): Promise<User> {
+    const objectId = new ObjectId(id);
+    const userToDelete = await this.userModel.findOne({ _id: objectId });
+
+    if (!userToDelete) {
+      throw new NotFoundException('Usuario no encontrado');
+    }
+
+    await this.userModel.deleteOne({ _id: objectId });
+    return userToDelete;
   }
 }

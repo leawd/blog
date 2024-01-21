@@ -78,7 +78,7 @@ export class UsersController {
   @Delete(':id')
   @UseGuards(JwtAuthGuard, AdminAuthGuard)
   @ApiOperation({ summary: 'Eliminar un usuario. Solo para usuarios ADMIN.' })
-  remove(@Param('id') id: string): Promise<User> | null {
+  remove(@Param('id') id: string): Promise<User> {
     return this.usersService.remove(id);
   }
 }
