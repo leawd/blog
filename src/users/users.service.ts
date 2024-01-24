@@ -14,12 +14,14 @@ import * as bcrypt from 'bcrypt';
 import { EmailValidationService } from 'src/helper.service';
 import { SanitizedUser } from './interfaces/sanitizedUser';
 import { ObjectId } from 'mongodb';
+import { LoggerService } from 'src/logs/logger.service';
 
 @Injectable()
 export class UsersService {
   constructor(
     @InjectModel(User.name) public userModel: Model<User>,
     private readonly emailValidationService: EmailValidationService,
+    private readonly loggerService: LoggerService
   ) {}
 
   /**
@@ -63,11 +65,15 @@ export class UsersService {
     }
 
     // contraseña -----
-    if (createUserDto.password.length < 8 || createUserDto.password.length > 20)
+    if (
+      createUserDto.password.length < 8 ||
+      createUserDto.password.length > 20
+    ) {
       throw new HttpException(
         'La contraseña debe tener entre 8 y 20 caracteres',
         HttpStatus.BAD_REQUEST,
       );
+    }
     // FIN VALIDACIONES -----
 
     // GUARDAR CONTRASEÑA CON HASH -----
@@ -80,6 +86,9 @@ export class UsersService {
     const newUser = new this.userModel(createdUser);
     try {
       const savedUser = await newUser.save();
+
+      this.loggerService.log('Se registró el usuario ' + createUserDto.username);
+
       return savedUser;
     } catch (error) {
       console.log(error);
@@ -181,7 +190,7 @@ export class UsersService {
         );
       }
     } catch (error) {
-      console.error('Error al actualizar el usuario:', error);
+      this.loggerService.error('Error al actualizar usuario ' + id, error.message);
       throw new HttpException(
         'Error al actualizar el usuario: consulte los registros para obtener más información',
         HttpStatus.INTERNAL_SERVER_ERROR,
@@ -198,9 +207,12 @@ export class UsersService {
     }
 
     await this.userModel.deleteOne({ _id: objectId });
+
+    this.loggerService.log('Se eliminó el usuario ' + userToDelete.username);
+
+
     return userToDelete;
   }
-
 
   // INSERCION DE USUARIOS DE PRUEBA SOLO SI NO EXISTEN -----
   async onApplicationBootstrap() {
@@ -212,29 +224,34 @@ export class UsersService {
 
     if (!adminUser) {
       const newAdminObjectId = new ObjectId();
+      const hashedPasswordAdmin = await bcrypt.hash('admin1234', 10);
 
       await this.userModel.create({
         _id: newAdminObjectId,
         username: 'admin',
         email: 'admin@admin.com',
-        password: 'admin1234',
+        password: hashedPasswordAdmin,
         roles: ['ADMIN'],
       });
+
+      this.loggerService.log('Se creó el usuario ADMIN de prueba');
     }
 
-    
     const userUser = await this.userModel.findOne({ username: 'usuario' });
 
     if (!userUser) {
       const newUserObjectId = new ObjectId();
+      const hashedPasswordUser = await bcrypt.hash('usuario1234', 10);
 
       await this.userModel.create({
         _id: newUserObjectId,
         username: 'usuario',
         email: 'usuario@usuario.com',
-        password: 'usuario1234',
+        password: hashedPasswordUser,
         roles: ['USER'],
       });
+
+      this.loggerService.log('Se creó el usuario USER de prueba');
     }
   }
 }

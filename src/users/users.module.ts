@@ -5,6 +5,7 @@ import { UsersController } from './users.controller';
 import { User, UserSchema } from './schemas/user.schema';
 import { EmailValidationService } from 'src/helper.service';
 import { AdminsController } from './admins.controller';
+import { LoggerService } from 'src/logs/logger.service';
 
 @Module({
   imports: [
@@ -13,7 +14,7 @@ import { AdminsController } from './admins.controller';
     ]),
   ],
   controllers: [UsersController, AdminsController],
-  providers: [UsersService, EmailValidationService],
+  providers: [UsersService, EmailValidationService, LoggerService],
   exports: [UsersService],
 })
 export class UsersModule {}

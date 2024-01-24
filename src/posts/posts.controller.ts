@@ -18,10 +18,12 @@ import { PostsService } from './posts.service';
 import { CreatePostDto } from './dto/create-post.dto';
 import { UpdatePostDto } from './dto/update-post.dto';
 import { Post as PostInterface } from './interfaces/posts';
+import { Post as PostSchema } from './schemas/posts.schema';
 import { ApiTags, ApiOperation, ApiBody, ApiParam } from '@nestjs/swagger';
 import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
 import { AdminAuthGuard } from 'src/auth/guards/admin.guard';
 import { UsersService } from 'src/users/users.service';
+import { LoggerService } from 'src/logs/logger.service';
 
 @ApiTags('posts')
 @Controller('posts')
@@ -29,6 +31,7 @@ export class PostsController {
   constructor(
     private readonly postsService: PostsService,
     private readonly usersService: UsersService,
+    private readonly loggerService: LoggerService
   ) {}
 
   // búsqueda de posts, lo puse primero porque sino daba ----
@@ -65,9 +68,19 @@ export class PostsController {
 
   @Post()
   @ApiOperation({ summary: 'Crear un nuevo post' })
+  @UseGuards(JwtAuthGuard)
   @ApiBody({ type: CreatePostDto, description: 'Datos del post a crear' })
-  create(@Body() createPostDto: CreatePostDto) {
-    return this.postsService.create(createPostDto);
+  async create(
+    @Body() createPostDto: CreatePostDto,
+    @Req() req,
+  ): Promise<PostSchema> {
+    const user = req.user;
+    createPostDto.user_id = user._id;
+    let post = await this.postsService.create(createPostDto);
+    if (post) {
+      this.loggerService.log(`El usuario ${user._id} creó el post (${post.title})`);
+      return post;
+    }
   }
 
   @Get()
@@ -112,12 +125,15 @@ export class PostsController {
       );
     }
 
+    this.loggerService.log(`El usuario (${user._id}) actualizó el post (${post._id})`);
+
     return this.postsService.update(id, updatePostDto);
   }
 
   @Delete(':id')
   @ApiOperation({
-    summary: 'Elimina un post. Solo para usuarios ADMIN o el creador del post a actualizar.',
+    summary:
+      'Elimina un post. Solo para usuarios ADMIN o el creador del post a actualizar.',
   })
   async remove(
     @Param('id') id: string,
@@ -136,6 +152,8 @@ export class PostsController {
         'No tienes permisos para realizar esta acción',
       );
     }
+
+    this.loggerService.log(`El usuario ${user.username} eliminó el post ${post.title}`);
 
     return this.postsService.remove(id);
   }

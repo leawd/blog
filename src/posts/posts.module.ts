@@ -4,6 +4,7 @@ import { PostsService } from './posts.service';
 import { PostsController } from './posts.controller';
 import { Post, PostSchema } from './schemas/posts.schema';
 import { UsersModule } from '../users/users.module';
+import { LoggerService } from 'src/logs/logger.service';
 
 @Module({
   imports: [
@@ -13,7 +14,7 @@ import { UsersModule } from '../users/users.module';
     UsersModule,
   ],
   controllers: [PostsController],
-  providers: [PostsService],
+  providers: [PostsService, LoggerService],
   exports: [PostsService],
 })
 export class PostsModule {}
