@@ -1,22 +1,19 @@
 import {
   BadRequestException,
-  Body,
-  ConflictException,
   HttpException,
   HttpStatus,
   Injectable,
   NotFoundException,
-  ValidationPipe,
 } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { Document, Model, MongooseError, Types } from 'mongoose';
+import { Model } from 'mongoose';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { User } from './schemas/user.schema';
 import * as bcrypt from 'bcrypt';
 import { EmailValidationService } from 'src/helper.service';
 import { SanitizedUser } from './interfaces/sanitizedUser';
-import { MongoError, ObjectId } from 'mongodb';
+import { ObjectId } from 'mongodb';
 
 @Injectable()
 export class UsersService {
@@ -202,5 +199,42 @@ export class UsersService {
 
     await this.userModel.deleteOne({ _id: objectId });
     return userToDelete;
+  }
+
+
+  // INSERCION DE USUARIOS DE PRUEBA SOLO SI NO EXISTEN -----
+  async onApplicationBootstrap() {
+    await this.seedUsers();
+  }
+
+  private async seedUsers() {
+    const adminUser = await this.userModel.findOne({ username: 'admin' });
+
+    if (!adminUser) {
+      const newAdminObjectId = new ObjectId();
+
+      await this.userModel.create({
+        _id: newAdminObjectId,
+        username: 'admin',
+        email: 'admin@admin.com',
+        password: 'admin1234',
+        roles: ['ADMIN'],
+      });
+    }
+
+    
+    const userUser = await this.userModel.findOne({ username: 'usuario' });
+
+    if (!userUser) {
+      const newUserObjectId = new ObjectId();
+
+      await this.userModel.create({
+        _id: newUserObjectId,
+        username: 'usuario',
+        email: 'usuario@usuario.com',
+        password: 'usuario1234',
+        roles: ['USER'],
+      });
+    }
   }
 }
