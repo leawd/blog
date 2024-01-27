@@ -32,10 +32,10 @@ export class UsersController {
   }
 
   @Get()
-  @UseGuards(JwtAuthGuard, AdminAuthGuard)
+  @UseGuards(JwtAuthGuard)
   @ApiOperation({
     summary:
-      'Obtener listado de todos los usuarios. Solo los usuarios ADMIN pueden acceder.',
+      'Obtener listado de todos los usuarios.',
   })
   findAll(): Promise<User[]> {
     return this.usersService.findAll();

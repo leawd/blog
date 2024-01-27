@@ -1,52 +1,46 @@
 import {
   Controller,
   Get,
-  Post,
-  Body,
-  Patch,
-  Param,
-  Delete,
-  HttpException,
-  HttpStatus,
-  Put,
   UseGuards,
   ForbiddenException,
   Req,
-  Query,
-  DefaultValuePipe,
-  ParseIntPipe,
-  BadRequestException,
 } from '@nestjs/common';
 import { PostsService } from './posts.service';
-import { CreatePostDto } from './dto/create-post.dto';
-import { UpdatePostDto } from './dto/update-post.dto';
 import { Post as PostInterface } from './interfaces/posts';
 import { ApiTags, ApiOperation, ApiBody, ApiParam } from '@nestjs/swagger';
 import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
 import { AdminAuthGuard } from 'src/auth/guards/admin.guard';
 import { UsersService } from 'src/users/users.service';
-import { Post as PostSchema } from './schemas/posts.schema';
 
+@UseGuards(JwtAuthGuard, AdminAuthGuard)
 @ApiTags('admin')
 @Controller('admin')
-export class PostsController {
+export class AdminController {
   constructor(
     private readonly postsService: PostsService,
     private readonly usersService: UsersService,
   ) {}
-  
 
-  // obtener por userid -----
-  async getPostsByUser(@Param('userId') userId: string) {
-    const posts = await this.postsService.getPostsByUser(userId);
-    return posts;
+  private isAdmin(req) {
+    const user = req.user;
+
+    // Verificar si el usuario es un administrador o el creador del post
+    const isAdmin = user.roles.includes('ADMIN');
+
+    if (!isAdmin) {
+      throw new ForbiddenException(
+        'No tienes permisos para realizar esta acción',
+      );
+    }
+    return true;
   }
 
-  // @Get('posts')
-  // @UseGuards(JwtAuthGuard, AdminAuthGuard)
-  // @ApiOperation({summary:'xxxxxx'})
-  // async getPosts(): Promise<PostSchema[]>{
-    
-  // }
-
+  @Get()
+  @ApiOperation({
+    summary: 'Devuelve todos los posts solo para ADMIN',
+  })
+  adminFindAll(@Req() req): Promise<PostInterface[]> | null {
+    this.isAdmin(req);
+    return this.postsService.findAll();
+  }
 }
